@@ -1,0 +1,61 @@
+name: Semgrep Move Scan
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - '**/*.move'
+  pull_request:
+    paths:
+      - '**/*.move'
+  workflow_dispatch:
+
+jobs:
+  semgrep-move:
+    name: Scan Move Contracts
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: read
+      security-events: write
+      actions: read
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Checkout Aptos Semgrep Move rules
+        uses: actions/checkout@v4
+        with:
+          repository: aptos-labs/semgrep-move-rules
+          path: semgrep-move-rules
+
+      - name: Install Semgrep
+        run: |
+          python3 -m pip install semgrep
+          semgrep --version
+
+      - name: Run Semgrep on Move files
+        run: |
+          semgrep scan \
+            --config semgrep-move-rules/ \
+            --include="*.move" \
+            --sarif \
+            --output semgrep-move-results.sarif \
+            --verbose \
+            --dataflow-traces
+        continue-on-error: true
+
+      - name: Upload SARIF results to GitHub
+        uses: github/codeql-action/upload-sarif@v3
+        with:
+          sarif_file: semgrep-move-results.sarif
+        if: always()
+
+      - name: Upload Semgrep results as artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: semgrep-move-results-${{ github.run_id }}
+          path: semgrep-move-results.sarif
+        if: always()
