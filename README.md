@@ -65,3 +65,23 @@ Automated security scanning for Solidity smart contracts using Semgrep with comm
 ##### Reference
 
 - Semgrep Solidity rules https://semgrep.dev/explore?lang=solidity
+
+### Rust Infrastructure
+
+#### 1. Aptos Core Fuzzer
+
+Continuous fuzzing of Aptos Core Rust components using `cargo fuzz` across all configured targets.
+
+##### Triggers
+
+- **Push events:** Runs on pushes to `main`
+- **Pull requests:** Runs on PRs targeting `main`
+- **Manual trigger:** `workflow_dispatch` accepts optional `duration` (seconds per target) and `targets` (comma-separated list) inputs
+
+##### Steps
+
+1. **Lists fuzz targets** from `testsuite/fuzzer/fuzz/Cargo.toml` or uses manually supplied targets
+2. **Installs Rust nightly** toolchain and build dependencies
+3. **Builds fuzz targets** with required features and AddressSanitizer enabled
+4. **Runs cargo-fuzz** for each target with timeouts and optional pre-seeded corpora
+5. **Uploads artifacts** including crashes, corpora, and fuzz logs for triage
