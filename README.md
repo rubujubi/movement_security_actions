@@ -41,3 +41,27 @@ Automated security scanning for Move smart contracts using Semgrep with Aptos Mo
 
 - Semgrep aptos-move rules repo https://github.com/aptos-labs/semgrep-move-rules
 - Medium tutorial for semgrep on move https://medium.com/aptoslabs/semgrep-support-for-move-on-aptos-39f9109f2266
+
+### Solidity
+
+#### 1. Semgrep Solidity Scan
+
+Automated security scanning for Solidity smart contracts using Semgrep with community Solidity rulepacks.
+
+##### Triggers
+
+- **Push events:** Runs on pushes to `main` branch when `.sol` files are modified
+- **Pull requests:** Runs when `.sol` files are changed in any PR
+- **Manual trigger:** Can be manually triggered via `workflow_dispatch` by users with write access
+
+##### Steps
+
+1. **Checks out the repository** containing Solidity contracts
+2. **Runs Semgrep** inside the official Semgrep container using the Solidity rulepack (`r/solidity`) and auto-detected rules, outputting SARIF
+3. **Uploads results** to:
+   - GitHub Security tab (Code Scanning alerts)
+   - Workflow artifacts (downloadable SARIF file)
+
+##### Reference
+
+- Semgrep Solidity rules https://semgrep.dev/explore?lang=solidity
