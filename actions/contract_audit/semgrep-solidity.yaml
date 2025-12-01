@@ -1,0 +1,53 @@
+name: Semgrep Solidity Scan
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - '**/*.sol'
+  pull_request:
+    paths:
+      - '**/*.sol'
+  workflow_dispatch:
+
+jobs:
+  semgrep-solidity:
+    name: Scan Solidity Contracts
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: read
+      security-events: write 
+      actions: read
+
+    container:
+      image: returntocorp/semgrep
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Run Semgrep
+        run: |
+          semgrep scan \
+            --config auto \
+            --config "r/solidity" \
+            --include="*.sol" \
+            --sarif \
+            --output semgrep-results.sarif \
+            --verbose
+        continue-on-error: true
+
+      - name: Upload SARIF results to GitHub
+        uses: github/codeql-action/upload-sarif@v3
+        with:
+          sarif_file: semgrep-results.sarif
+        if: always()
+
+      - name: Upload Semgrep results as artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: semgrep-results
+          path: semgrep-results.sarif
+        if: always()
