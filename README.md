@@ -66,22 +66,50 @@ Automated security scanning for Solidity smart contracts using Semgrep with comm
 
 - Semgrep Solidity rules https://semgrep.dev/explore?lang=solidity
 
-### Rust Infrastructure
+## Rust Infrastructure
 
-#### 1. Aptos Core Fuzzer
+### 1. Aptos Core Fuzzer
 
 Continuous fuzzing of Aptos Core Rust components using `cargo fuzz` across all configured targets.
 
-##### Triggers
+#### Triggers
 
 - **Push events:** Runs on pushes to `main`
 - **Pull requests:** Runs on PRs targeting `main`
 - **Manual trigger:** `workflow_dispatch` accepts optional `duration` (seconds per target) and `targets` (comma-separated list) inputs
 
-##### Steps
+#### Steps
 
 1. **Lists fuzz targets** from `testsuite/fuzzer/fuzz/Cargo.toml` or uses manually supplied targets
 2. **Installs Rust nightly** toolchain and build dependencies
 3. **Builds fuzz targets** with required features and AddressSanitizer enabled
 4. **Runs cargo-fuzz** for each target with timeouts and optional pre-seeded corpora
 5. **Uploads artifacts** including crashes, corpora, and fuzz logs for triage
+
+## LLM Audit
+
+[Report from Anthropic](https://red.anthropic.com/2025/smart-contracts/) provided an example of LLM's capability in security reviews in Ethereum smart contracts. The prompt used in the experiment is also in the post. In summary, they built an agent running in sandbox, with accessability to the following tools: foundry, uniswap-smart-path, slither, etc. The average cost per agent run is $1.22 (calculated with gpt-5), the agent is given a time limit of 1 hour to finish the work.
+
+Currently our target for integrating LLM tool into the audit process is to have LLM as an assistance to replace some manual inspection work. We want to use LLM alongside development. (i.e. we are dealing with contracts that are WIP, not contracts that are already deployed. )
+
+In that case we care more about knowing the existence of potential attack vector, instead to build a fully automated pipeline (since we have human in the loop)
+
+Therefore, two lines of effort will be provided here, leveraging performance and the amount of human in the loop involved.
+
+- A set of dedicated prompts to be used in Movement development context. 
+   - This can be used as a template for any LLM interaction and it serves as some prompt engineering effort that enforces standard and detailed information to be collected from LLM output.
+
+- An automated pipeline that will be trigged by PR and automatically fetch relevant context based on file diffs.
+
+### Instructions
+
+Currently only support anthropic API, more LLM support will be added in the future.
+
+#### Set secret variables
+
+repo settings -> Security -> Secrets and variables
+
+```
+# Set your LLM API key
+ANTHROPIC_API_KEY=
+```
