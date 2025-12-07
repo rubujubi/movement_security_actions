@@ -1,0 +1,52 @@
+name: Move CI
+
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+
+jobs:
+  move-tests:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.x"
+
+      - name: Install Aptos CLI
+        run: |
+          curl -fsSL https://aptos.dev/scripts/install_cli.py | python3 -
+          echo "$HOME/.aptoscli/bin" >> "$GITHUB_PATH"
+
+      - name: Run Move unit tests
+        run: |
+          aptos move test --dev
+
+  move-prover:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.x"
+
+      - name: Install Aptos CLI
+        run: |
+          curl -fsSL https://aptos.dev/scripts/install_cli.py | python3 -
+          echo "$HOME/.aptoscli/bin" >> "$GITHUB_PATH"
+
+      - name: Install Move Prover dependencies
+        run: |
+          aptos update prover-dependencies
+
+      - name: Run Move Prover
+        run: |
+          aptos move prove --dev
+        continue-on-error: true
