@@ -3,7 +3,11 @@ name: Move CI
 on:
   push:
     branches: [main, master]
+    paths:
+      - '**.move'
   pull_request:
+    paths:
+      - '**.move'
 
 jobs:
   move-tests:
