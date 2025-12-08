@@ -1,21 +1,16 @@
 import os
 import json
-import base64
 import subprocess
-import requests
 import anthropic
 from pathlib import Path
 from typing import Any
-
-
-# Load the GitHub event payload for this run
-def load_event() -> dict:
-    
-    event_path = os.environ.get("GITHUB_EVENT_PATH")
-    if not event_path or not os.path.exists(event_path):
-        raise RuntimeError("GITHUB_EVENT_PATH is not set or file does not exist")
-    with open(event_path, "r") as f:
-        return json.load(f)
+from utils import (
+    load_event,
+    get_pr_files,
+    get_file_content,
+    post_issue_comment,
+    load_language_prompt,
+)
 
 # Get PR files locally using git
 def get_pr_files_local(repo_path: str, base_ref: str, head_ref: str) -> list[dict]:
@@ -102,97 +97,6 @@ def get_pr_files_local(repo_path: str, base_ref: str, head_ref: str) -> list[dic
     except Exception as e:
         print(f"Error getting files locally: {e}")
         return []
-
-
-# Fetch the list of files in a pull request (fallback to API)
-def get_pr_files(owner: str, repo: str, pr_number: int, github_token: str) -> list[dict]:
-    headers = {
-        "Authorization": f"Bearer {github_token}",
-        "Accept": "application/vnd.github+json",
-    }
-
-    all_files = []
-    page = 1
-
-    while True:
-        url = (
-            f"https://api.github.com/repos/{owner}/{repo}/pulls/"
-            f"{pr_number}/files?page={page}&per_page=100"
-        )
-        res = requests.get(url, headers=headers)
-        res.raise_for_status()
-
-        page_files = res.json()
-        all_files.extend(page_files)
-
-        if len(page_files) < 100:
-            break
-        page += 1
-
-    return all_files
-
-# Fetch the full content of a file at a specific ref 
-def get_file_content(owner: str, repo: str, ref: str, path: str, github_token: str) -> str:
-    url = f"https://api.github.com/repos/{owner}/{repo}/contents/{path}"
-    headers = {
-        "Authorization": f"Bearer {github_token}",
-        "Accept": "application/vnd.github+json",
-    }
-    params = {"ref": ref}
-
-    res = requests.get(url, headers=headers, params=params)
-    if res.status_code == 404:
-        return ""  # File deleted or not found
-    res.raise_for_status()
-
-    data = res.json()
-
-    if isinstance(data, dict) and data.get("encoding") == "base64":
-        return base64.b64decode(data["content"])
-
-    if isinstance(data, dict) and "content" in data:
-        return data["content"]
-
-    return ""
-
-
-def post_issue_comment(owner: str, repo: str, pr_number: int, token: str, body: str) -> None:
-    url = f"https://api.github.com/repos/{owner}/{repo}/issues/{pr_number}/comments"
-    res = requests.post(
-        url,
-        headers={
-            "Authorization": f"Bearer {token}",
-            "Accept": "application/vnd.github+json",
-        },
-        json={"body": body},
-    )
-    res.raise_for_status()
-
-#Load base system prompt from prompts/<mode>/<language>.txt
-def load_language_prompt(language: str, mode: str = "agentic_tool") -> str:
-    lang = (language or "generic").lower()
-    base_dir = os.path.dirname(__file__)
-    prompts_dir = os.path.join(base_dir, "prompts", mode)
-
-    def read_prompt(name: str) -> str:
-        path = os.path.join(prompts_dir, name)
-        if os.path.exists(path):
-            with open(path, "r") as f:
-                return f.read().strip()
-        return ""
-
-    # 1) language-specific
-    content = read_prompt(f"{lang}.txt")
-    if content:
-        return content
-
-    # 2) generic fallback
-    content = read_prompt("generic.txt")
-    if content:
-        return content
-
-    # 3) last-resort fallback
-    return "You are a senior code reviewer."
 
 
 def build_system_prompt() -> str:
