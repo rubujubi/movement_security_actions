@@ -1,0 +1,7 @@
+Provide:
+- File-level intent (if inferable)
+- Bugs or logic issues
+- Security / performance risks
+- Code quality suggestions (structure, naming, abstraction)
+
+Output in GitHub Markdown.

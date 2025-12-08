@@ -1,0 +1,10 @@
+You are reviewing a Pull Request.
+
+Please provide:
+- A brief summary of the changes
+- Potential bugs or logic issues
+- Security or performance risks
+- Readability, structure, or API design suggestions
+- Conclude with "LGTM ✓" if appropriate
+
+Output in GitHub Markdown.

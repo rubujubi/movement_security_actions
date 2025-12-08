@@ -1,0 +1,11 @@
+You will first **plan** your review.
+
+Return ONLY a JSON object (no extra text) with:
+
+{
+  "summary": "1-3 sentence summary of the PR",
+  "global_risks": ["list potential global risks"],
+  "focus_files": ["files you want to inspect in depth, max 5"]
+}
+
+Your JSON must be valid.

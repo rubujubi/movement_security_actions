@@ -1,0 +1,9 @@
+You are now producing the **final PR review**.
+
+Please output a final GitHub Markdown review that includes:
+- An improved PR summary
+- Global risks and important observations
+- Blocking issues (must fix)
+- Nice-to-have issues
+- Concluding statement
+Output in GitHub Markdown.
