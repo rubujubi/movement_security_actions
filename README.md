@@ -101,15 +101,70 @@ Therefore, two lines of effort will be provided here, leveraging performance and
 
 - An automated pipeline that will be trigged by PR and automatically fetch relevant context based on file diffs.
 
-### Instructions
+### 1. LLM PR Review Bot
 
-Currently only support anthropic API, more LLM support will be added in the future.
+Automated code review for Pull Requests using LLMs (currently only support claude).
 
-#### Set secret variables
+#### Triggers
 
-repo settings -> Security -> Secrets and variables
+- **Pull requests:** Runs when PRs are opened or synchronized
 
+#### Steps
+
+##### Agentic tools
+
+1. **Checks out the repository** with full git history
+2. **Loads language-specific prompt** from `prompts/<language>.txt` (e.g., `move.txt` for Move security audits)
+3. **Analyzes PR changes** using one of three modes:
+   - **Simple:** One-shot review of PR diff
+   - **Agentic:** Multi-step review with planning and synthesis
+   - **Agentic Tools:** Claude iteratively explores codebase using tools (read files, search code, list directories)
+4. **Outputs results** either as PR comment or as log output (configurable via `review_output_mode`)
+
+#### Setup
+
+**1. Set Secret Variables:**
+
+Repository -> Settings -> Security -> Secrets and variables -> Actions -> Secrets
+
+Add secret:
 ```
-# Set your LLM API key
-ANTHROPIC_API_KEY=
+ANTHROPIC_API_KEY=your-api-key-here
 ```
+
+**2. Set Repository Variables:**
+
+Repository -> Settings -> Security -> Secrets and variables -> Actions -> Variables
+
+Add variable:
+```
+# Choose the claude model you want to use
+CLAUDE_MODEL=claude-sonnet-4-5-20250929
+```
+
+**3. Configure Workflow:**
+
+Example set up in `.github/workflows/llm-pr-review.yml`:
+
+
+
+**Key Parameters:**
+- `language`: Loads prompt from `prompts/<language>.txt` (e.g., `move`, `rust`, `solidity`, `generic`)
+- `review_mode`: `simple`, `agentic`, or `agentic_tools`
+- `extra_instructions`: Additional custom review instructions
+- `llm_provider`: `claude` or `gpt` (Currently only support claude)
+- `claude_model`: Claude model name (recommended to use `${{ vars.CLAUDE_MODEL }}` repository variable)
+- `openai_model`: OpenAI model name (if using GPT, also recommended to use repository variable)
+
+#### Language-Specific Prompts
+
+The bot supports custom security audit templates via the `prompts/` directory, currently providing:
+
+Agentic tool:
+
+- `prompts/agentic_tool/move.txt` - Comprehensive Aptos Move security audit prompt
+
+- `prompts/agentic_tool/generic.txt` - Default general code review prompt
+
+Create custom prompts for other languages by adding `prompts/<review_mode>/<language>.txt` and setting `language: <language>`.
+
